@@ -44,4 +44,4 @@ Datasets might be too limited, considering where the source for the sentences ar
 - Dataset used will be the Penn treebank dataset (https://catalog.ldc.upenn.edu/LDC99T42) and ASLU (American Sign Language University) https://www.lifeprint.com/. We have also reached out to the Department of Linguistics at Gallaudet University for more clean ASL corpus.
 
 ### Topics we’d like for lecture or class discussion:
-Maybe basics over ASL? (tentative, can delete if you guys want)
+Maybe basics over ASL
