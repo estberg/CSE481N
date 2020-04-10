@@ -6,7 +6,7 @@ date:   2020-04-09 21:29:06 -0700
 
 ### 1. ASL Recognition
 #### Pros
-This is a relatively unexplored problem. Although there is a body of prior work, there is definitely room for improvement, expanding the work to include more data, and trying new approaches. Whether we are retrying old approaches on new datasets or bringing our own ideas, it will be meaningful work to expand on this body of research. Further, it is a problem that excites us and is useful! 
+American Sign Language Recognition, as a branch of  Natural Language Processing, is a relatively unexplored problem. Although there is a body of prior work, there is definitely room for improvement, expanding the work to include more data, and trying new approaches. Whether we are retrying old approaches on new datasets or bringing our own ideas, it will be meaningful work to expand on this body of research. Further, it is a problem that excites us and is useful! 
 
 Another pro is that this is a slightly simpler task than translation. Focusing just on individual words is easier than sentences with complex grammar structures. There are also more and bigger datasets of videos of ASL that are annotated by individual words. 
 
@@ -41,7 +41,7 @@ Datasets might be too limited, considering where the source for the sentences ar
 
 #### Codebases, Datasets, and Papers
 - Codebase based off of Python 3’s nltk (https://www.cs.bgu.ac.il/~elhadad/nlp16/NLTK-PCFG.html), and/or torch, tensorflow. 
-- Dataset used will be the Penn treebank dataset (https://catalog.ldc.upenn.edu/LDC99T42).
+- Dataset used will be the Penn treebank dataset (https://catalog.ldc.upenn.edu/LDC99T42) and ASLU (American Sign Language University) https://www.lifeprint.com/. We have also reached out to the Department of Linguistics at Gallaudet University for more clean ASL corpus.
 
 ### Topics we’d like for lecture or class discussion:
 Maybe basics over ASL? (tentative, can delete if you guys want)
