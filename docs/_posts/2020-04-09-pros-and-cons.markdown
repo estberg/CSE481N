@@ -19,7 +19,8 @@ This is a challenging problem. Although a language analysis task, it relies heav
 - Dataset: 2000 words from over 100 signers. [dataset available on github](https://github.com/dxli94/WLASL)
 [**Microsoft-American Sign Language Dataset**](http://export.arxiv.org/pdf/1812.01053)
 - Approach: 
-- 1000 words from over 200 signers. [dataset available](https://www.microsoft.com/en-us/research/project/ms-asl/) 
+- 1000 words from over 200 signers. [dataset available](https://www.microsoft.com/en-us/research/project/ms-asl/)
+- ASLU (American Sign Language University) https://www.lifeprint.com/. We have also reached out to the Department of Linguistics at Gallaudet University for more clean ASL corpus.
 
 ### 2. ASL Translation
 #### Pros
@@ -41,7 +42,7 @@ Datasets might be too limited, considering where the source for the sentences ar
 
 #### Codebases, Datasets, and Papers
 - Codebase based off of Python 3’s nltk (https://www.cs.bgu.ac.il/~elhadad/nlp16/NLTK-PCFG.html), and/or torch, tensorflow. 
-- Dataset used will be the Penn treebank dataset (https://catalog.ldc.upenn.edu/LDC99T42) and ASLU (American Sign Language University) https://www.lifeprint.com/. We have also reached out to the Department of Linguistics at Gallaudet University for more clean ASL corpus.
+- Dataset used will be the Penn treebank dataset (https://catalog.ldc.upenn.edu/LDC99T42).
 
 ### Topics we’d like for lecture or class discussion:
-Maybe basics over ASL
+- Basics on ASL, and some current work being done in the field
