@@ -1,2 +1,4 @@
+.DS_Store
+
 # Ignore gem files for Github Pages
 /docs/vendor/
