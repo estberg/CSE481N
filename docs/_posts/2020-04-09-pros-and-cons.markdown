@@ -15,10 +15,10 @@ This is a challenging problem. Although a language analysis task, it relies heav
 
 #### Codebases, Datasets, and Papers
 [**Word-level Deep Sign Language Recognition**](https://www.groundai.com/project/word-level-deep-sign-language-recognition-from-video-a-new-large-scale-dataset-and-methods-comparison/1)
-- Approach: 
+- Approach: using computer vision for video processing; also using Python's cv2 and torch 
+- Codebase: Convolutional Neural Network (CNN) for video feature representation generation
 - Dataset: 2000 words from over 100 signers. [dataset available on github](https://github.com/dxli94/WLASL),
 [**Microsoft-American Sign Language Dataset**](http://export.arxiv.org/pdf/1812.01053)
-- Approach: 
 - 1000 words from over 200 signers. [dataset available](https://www.microsoft.com/en-us/research/project/ms-asl/)
 - [ASLU (American Sign Language University)](https://www.lifeprint.com/). We have also reached out to the Department of Linguistics at Gallaudet University for more clean ASL corpus.
 
