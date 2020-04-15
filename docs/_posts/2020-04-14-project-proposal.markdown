@@ -33,7 +33,8 @@ There is a significant population of around 500,000 people communicating with AS
 - [**Word-level Deep Sign Language Recognition from Video: A New Large-scale Dataset and Methods Comparison**](https://www.groundai.com/project/word-level-deep-sign-language-recognition-from-video-a-new-large-scale-dataset-and-methods-comparison/1)
  
 #### Stretch Goal: Body Key Points
-- [**https://www.ijcai.org/Proceedings/2018/0109.pdf**](https://www.ijcai.org/Proceedings/2018/0109.pdf)
+- [**Co-occurrence Feature Learning from Skeleton Data for Action Recognition and
+Detection with Hierarchical Aggregation**](https://www.ijcai.org/Proceedings/2018/0109.pdf)
 - [**Realtime Multi-Person 2D Pose Estimation using Part Affinity Fields**](https://arxiv.org/pdf/1611.08050.pdf)
 - [**Hand Keypoint Detection in Single Images using Multiview Bootstrapping**](https://arxiv.org/pdf/1704.07809.pdf)
  
@@ -50,8 +51,9 @@ We are planning to do preprocessing on our dataset that would involve using an o
 ### Available Resources
 #### Main Goal: Recognition -- Datasets
 - [**Microsoft American Sign Language Dataset**](https://www.microsoft.com/en-us/research/project/ms-asl/#!downloads)
-- [**ASLU (American Sign Language University)**](https://www.lifeprint.com/). We have also reached out to the Department of Linguistics at Gallaudet University for more clean ASL corpus.
+- [**ASLU (American Sign Language University)**](https://www.lifeprint.com/)
 - [**National Center for Sign Language and Gesture Resources (NCSLGR) Corpus**](http://secrets.rutgers.edu/dai/queryPages/querySelection.php)
+- We have also reached out to the Department of Linguistics at Gallaudet University for more clean ASL corpus.
 
 #### Main Goal: Recognition -- Code Bases
 - [**I3D**](https://github.com/deepmind/kinetics-i3d)
