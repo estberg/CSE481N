@@ -1,0 +1,63 @@
+name: slim
+channels:
+  - anaconda
+  - conda-forge
+  - defaults
+dependencies:
+  - bzip2=1.0.8=h0b31af3_2
+  - ca-certificates=2020.4.5.1=hecc5488_0
+  - cairo=1.16.0=h0ab9d94_1001
+  - certifi=2020.4.5.1=py37hc8dfbb8_0
+  - ffmpeg=4.0=h01ea3c9_0
+  - fontconfig=2.13.1=h1027ab8_1000
+  - freetype=2.10.1=h8da9a1a_0
+  - gettext=0.19.8.1=h46ab8bc_1002
+  - glib=2.58.3=h9d45998_1002
+  - graphite2=1.3.13=h2098e52_1000
+  - harfbuzz=1.8.8=hb8d4a28_0
+  - hdf5=1.10.2=hc401514_3
+  - icu=58.2=h0a44026_1000
+  - jasper=2.0.14=h45d9283_1
+  - joblib=0.14.1=py_0
+  - jpeg=9c=h1de35cc_1001
+  - libblas=3.8.0=14_openblas
+  - libcblas=3.8.0=14_openblas
+  - libcxx=4.0.1=hcfea43d_1
+  - libcxxabi=4.0.1=hcfea43d_1
+  - libedit=3.1.20181209=hb402a30_0
+  - libffi=3.2.1=h475c297_4
+  - libgfortran=3.0.1=0
+  - libiconv=1.15=h0b31af3_1006
+  - liblapack=3.8.0=14_openblas
+  - libopenblas=0.3.7=hd44dcd8_1
+  - libopencv=3.4.2=h7c891bd_1
+  - libopus=1.3=h1de35cc_0
+  - libpng=1.6.37=hbbe82c9_1
+  - libtiff=4.0.10=hd08fb8f_1003
+  - libvpx=1.7.0=h378b8a2_0
+  - libxml2=2.9.9=hf6e021a_1
+  - lz4-c=1.8.3=h6de7cb9_1001
+  - ncurses=6.2=h0a44026_0
+  - numpy=1.18.1=py37h7687784_1
+  - opencv=3.4.2=py37h6fd60c2_1
+  - openssl=1.1.1f=h0b31af3_0
+  - pcre=8.43=h0a44026_0
+  - pip=20.0.2=py37_1
+  - pixman=0.38.0=h01d97ff_1003
+  - py-opencv=3.4.2=py37h7c891bd_1
+  - python=3.7.7=hc70fcce_0_cpython
+  - python_abi=3.7=1_cp37m
+  - readline=8.0=h1de35cc_0
+  - setuptools=46.1.3=py37_0
+  - sqlite=3.31.1=ha441bb4_0
+  - tk=8.6.8=ha441bb4_0
+  - wheel=0.34.2=py37_0
+  - xz=5.2.5=h1de35cc_0
+  - youtube-dl=2020.3.24=py37hc8dfbb8_0
+  - zlib=1.2.11=h1de35cc_3
+  - zstd=1.4.0=ha9f0a20_0
+  - pip:
+    - opencv-python==4.2.0.34
+
+prefix: /Users/estberg/miniconda3/envs/slim
+

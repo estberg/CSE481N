@@ -1,4 +1,8 @@
 .DS_Store
+.vscode/
+
+# Ignore downloaded video files
+/data/MS-ASL/videos/
 
 # Ignore gem files for Github Pages
 /docs/vendor/
