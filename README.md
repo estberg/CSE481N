@@ -4,7 +4,20 @@
 
 ## Set Up
 
-Set up the conda environment in environment.yml
+1. Install [Conda](https://developers.google.com/earth-engine/python_install-conda) if there's no existing one in your machine.
+
+2. Set up the conda environment in environment.yml by following these instructions:
+
+    2.1 Create the environment from the `environment.yml` file
+    ```
+    conda env create -f environment.yml
+    ```
+   
+   2.2 Activate the environment called `slim`
+    ```
+    conda activate slim
+    ```
+   At this point, your Conda should be using `slim` environment. To verify the installation of the environment, run `conda env list` or `conda info --envs`
 
 ## Download
 
