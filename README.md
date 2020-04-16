@@ -19,12 +19,21 @@
     ```
    At this point, your Conda should be using `slim` environment. To verify the installation of the environment, run `conda env list` or `conda info --envs`
 
-## Download
+## Download and Set Up
 
-Run the following
+Run the following to download some videos
 
 ```
-python src/download_videos.py \
+python src/data_processing/download_videos.py \
 -s data/MS-ASL/meta/MSASL_tiny.json \
 -o data/MS-ASL/videos
+```
+
+Run the following to extract frames from the videos
+
+```
+python src/data_processing/extract_frames.py \
+  -s data/MS-ASL/meta/MSASL_tiny.json \
+  -v data/MS-ASL/videos \
+  -o data/MS-ASL/frames
 ```
