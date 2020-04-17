@@ -4,7 +4,7 @@
 
 ## Set Up
 
-Set up the conda environment in environment.yml
+[Set up the conda environment](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-from-an-environment-yml-file) in environment.yml
 
 ## Download and Set Up
 

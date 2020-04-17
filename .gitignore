@@ -1,5 +1,6 @@
 .DS_Store
 .vscode/
+__pycache__
 
 # Ignore downloaded video files and their frames
 /data/MS-ASL/videos/
