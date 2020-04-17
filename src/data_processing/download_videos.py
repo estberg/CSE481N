@@ -134,20 +134,21 @@ def print_data_sources_stat(data_sources):
         print('   - {}'.format(data_source))
 
 
-def collect_videos(data_sources):
+def collect_videos(data_sources, k):
     out_videos = dict()
     for data_source in data_sources:
         with open(data_source) as input_stream:
             data = json.load(input_stream)
 
         for record in data:
-            url = record['url']
-            end_frame = record['end']
-            video_name = url.split('?v=')[-1]
-            if video_name not in out_videos:
-                out_videos[video_name] = {'url': url, 'end_frame': end_frame}
-            else:
-                assert out_videos[video_name]['url'] == url
+            if record['label'] < k:
+                url = record['url']
+                end_frame = record['end']
+                video_name = url.split('?v=')[-1]
+                if video_name not in out_videos:
+                    out_videos[video_name] = {'url': url, 'end_frame': end_frame}
+                else:
+                    assert out_videos[video_name]['url'] == url
 
     return out_videos
 
@@ -182,6 +183,7 @@ def main():
     parser.add_argument('--output_dir', '-o', type=str, required=True)
     parser.add_argument('--extension', '-e', type=str, required=False, default='mp4')
     parser.add_argument('--num_jobs', '-n', type=int, required=False, default=24)
+    parser.add_argument('--topk', '-k', type=int, required=False, default=1000)
     args = parser.parse_args()
 
     ensure_dir_exists(args.output_dir)
@@ -190,7 +192,7 @@ def main():
     print_data_sources_stat(data_sources)
     assert len(data_sources) > 0
 
-    all_videos = collect_videos(data_sources)
+    all_videos = collect_videos(data_sources, args.topk)
     print('Found {} unique videos.'.format(len(all_videos)))
 
     tasks = prepare_tasks(all_videos, args.output_dir, args.extension)
