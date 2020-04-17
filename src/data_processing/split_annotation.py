@@ -11,6 +11,30 @@
  limitations under the License.
 """
 
+"""
+Split Annotation can be used after frames and information about 
+each video have been generated (by extract_frames.py) to split
+these into mutliple smaller sets. This  is used for getting 
+samples with the first 100 class of labels, 500, 1000, etc. It
+is not a representation of the size of the split.
+
+Usage:
+
+    python src/data_processing/split_annotation.py \
+    -a {list of paths to text files containing annotations} \
+    -k {subset of labels of splits}
+
+Example:
+
+    python src/data_processing/split_annotation.py \
+    -a data/MS-ASL/frames/train.txt data/MS-ASL/frames/train.txt data/MS-ASL/frames/train.txt \
+    -k 100 1000
+
+The result will be in the same frames directory as the txt files 
+containing the information of the samples to be used, and will be
+txt files of the same format with the specified numbers in the splits.
+"""
+
 from os.path import exists, abspath
 from argparse import ArgumentParser
 

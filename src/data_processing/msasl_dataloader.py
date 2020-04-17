@@ -6,12 +6,33 @@ import random
 import PIL
 
 class MSASLDataLoader(keras.utils.Sequence):
+    '''
+    This is a MSASLDataLoader that loads the data as a keras sequence.
 
+    TODO: This is probably not the best approach as each batch is loaded from images each time. 
+    Ideally we would save the numpy representations of the images either the first time 
+    they are loaded or in the preprocessing step to avoid this. 
+
+    Essentially, it allows batch indexing on the data, and each epoch will randomy reorganize. 
     '''
-    file_annotations : path
-        List of files and their annotations in a text file
-    '''
+
     def __init__(self, file_annotations, frames_dir, batch_size, width, height, color_mode='rgb', shuffle=True):
+        '''
+        file_annotations : path
+            List of files and their annotations in a text file
+        frames_dir: path
+            The path to the directory containing the frames directories
+        batch_size: int
+            The batch size
+        width: int
+            The width of the images
+        height: int
+            The height of the images
+        color_mode: 'rgb', 'rgba', or 'grayscale'
+            The color mode to read the images with
+        shuffle: boolean
+            Shuffle samples between epochs or not
+        '''
         self.file_annotations = file_annotations
         self.frames_dir = frames_dir
         self.batch_size = batch_size
@@ -27,16 +48,34 @@ class MSASLDataLoader(keras.utils.Sequence):
             raise Exception('Invalid Color Mode')
         self.width = width
         self.height = height
+        # Samples is a list of dictionaries containing the metadata for each sample
+        # See the _make_samples() method for the keys in the dictionary
         self.samples, self.max_frames = self._make_samples(file_annotations)
         self.indexes = np.arange(len(self.samples))
         self.on_epoch_end()
 
     def __len__(self):
-        'Returns the number of batches per epoch'
+        '''
+        Returns the number of batches per epoch
+        '''
         return int(np.floor(len(self.samples) / self.batch_size))
     
     def __getitem__(self, index):
-        'Generate one batch of data'
+        '''
+        Reads in and returns one batch of data.
+
+        Note that this can be used as:
+            data_generator = MSASLDataLoader(...)
+            data_generator[0] # will return the first batch of data
+
+        Returns:
+            X : tensor (batch_size, max_frames, color_channels, width, height)
+                the data of the batch
+                TODO: Note that this is max_frames length, so there will be padded frames
+                of all zeros in many cases. 
+            y : tensor (batch_size, )
+                the labels of the batch
+        '''
         # Generate indexes of the batch
         indexes = self.indexes[index*self.batch_size:(index+1)*self.batch_size]
 
@@ -44,12 +83,22 @@ class MSASLDataLoader(keras.utils.Sequence):
         batch_samples_idxs = [self.samples[k] for k in indexes]
 
         # Generate data
-        X, y, paddings = self.__data_generation(batch_samples_idxs)
+        X, y = self._data_generation(batch_samples_idxs)
 
-        return X, y, paddings
+        return X, y
     
-    def __data_generation(self, batch_samples_idxs):
-        'Generates data containing batch_size samples' 
+    def _data_generation(self, batch_samples_idxs):
+        """
+        Generates data containing batch_size samples.
+
+        Returns:
+            X : tensor (batch_size, max_frames, color_channels, width, height)
+                the data of the batch
+                TODO: Note that this is max_frames length, so there will be padded frames
+                of all zeros in many cases.
+            y : tensor (batch_size, )
+                the labels of the batch
+        """
         # X : (batch_size, max_frames, color_channels, width, height)
         # paddings : (batch_size, )
         # y : (batch_size, )
@@ -74,9 +123,6 @@ class MSASLDataLoader(keras.utils.Sequence):
                     interpolation='nearest'
                 )
                 x_ = keras.preprocessing.image.img_to_array(img, data_format='channels_first', dtype=int)
-                print('frame_idx', frame_idx)
-                print('start', start)
-                print('X.shape', X.shape)
                 X[idx, frame_idx - start, ] = x_
 
             # Store class
@@ -88,6 +134,16 @@ class MSASLDataLoader(keras.utils.Sequence):
         return X, y
     
     def _make_samples(self, file_annotations):
+        """
+        file_annotations: path
+            Path to the txt file containing the metadata for the samples
+        
+        Returns:
+            sample: list of dictionaries
+                Contains the parsed metadata for the samples
+            max_frames:
+                The maximum number of frames in a sample
+        """
         max_frames = 0
         samples = []
         with open(file_annotations) as f:
@@ -111,10 +167,15 @@ class MSASLDataLoader(keras.utils.Sequence):
         return samples, max_frames
     
     def get_data_dim(self):
-        'Returns dimension of one data sample'
+        """
+        Returns dimension of one data sample (this excludes batch size but 
+        is the shape of one element of a batch)
+        """
         return (self.max_frames, self.color_channels, self.width, self.height)
     
     def on_epoch_end(self):
-        'Randomly sort samples after each epoch'
+        """
+        If set at initialization randomly sort samples after each epoch
+        """
         if self.shuffle == True:
             random.shuffle(self.samples)

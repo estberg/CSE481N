@@ -11,6 +11,27 @@
  limitations under the License.
 """
 
+"""
+This script processes a bunch of video files and makes directories containing
+the frames from the files as well as txt files containing the information. 
+
+Usage (see the parser in main for defaults and options):
+
+    python src/data_processing/extract_frames.py \
+      -s {list of paths to .json files of MS-ASL metadeta} \
+      -v {path to directory with videos} \
+      -o {output directory for directories with frames and information txt files}
+
+Example:
+
+    python src/data_processing/extract_frames.py \
+      -s data/MS-ASL/meta/MSASL_train.json data/MS-ASL/meta/MSASL_val.json data/MS-ASL/meta/MSASL_test.json\
+      -v data/MS-ASL/videos \
+      -o data/MS-ASL/frames
+
+The result will be 
+"""
+
 import json
 from os import makedirs, listdir
 from os.path import exists, join, isfile, basename

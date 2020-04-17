@@ -11,6 +11,23 @@
  limitations under the License.
 """
 
+"""
+Python script for downloading the Youtube videos as .mp4 files. 
+
+Usage (see the parser in main for defaults and options): 
+    python src/data_processing/download_videos.py \
+    -s {list of paths to .json files of MS-ASL metadeta} \
+    -o {directory to output videos}
+
+Example:
+    python src/data_processing/download_videos.py \
+    -s data/MS-ASL/meta/MSASL_train.json data/MS-ASL/meta/MSASL_val.json data/MS-ASL/meta/MSASL_test.json\
+    -o data/MS-ASL/videos
+
+This will make a new directory if the output directory is not 
+found. It will put the videes directly in the output directory.
+"""
+
 import os
 import json
 import subprocess
