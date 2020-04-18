@@ -171,7 +171,7 @@ class MSASLDataLoader(keras.utils.Sequence):
         Returns dimension of one data sample (this excludes batch size but 
         is the shape of one element of a batch)
         """
-        return (self.max_frames, self.color_channels, self.width, self.height)
+        return (self.max_frames, self.color_channels, self.height, self.width)
     
     def on_epoch_end(self):
         """
