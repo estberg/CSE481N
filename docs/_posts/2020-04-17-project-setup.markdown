@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Blog Post 4: Project Setup"
+title:  "Blog Post 4: First Baseline Approach"
 date:   2020-04-17 21:00:06 -0700
 ---
 
@@ -23,6 +23,8 @@ We are using the top 3 labels (“hello”, “nice”, “teacher”) of the MS
 MS-ASL has provided us with train, validation, and test sets. Each video is labeled to a class (listing from 0-999), and each class corresponds to a specific word. For example, class 0 corresponds to “hello”, class 1 corresponds to “nice”, and so on.
 
 The evaluation metric is to calculate the accuracy: what percentage of the labels were correctly predicted by the model. (accuracy of recognition)
+
+After having run 5 epochs on the top-3 labels in the training set (95 videos), we have an accuracy of 0.008686.
 
 ### Note on Progressing
 
