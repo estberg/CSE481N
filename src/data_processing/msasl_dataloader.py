@@ -116,7 +116,7 @@ class MSASLDataLoader(keras.utils.Sequence):
             start = sample['start']
             end = sample['end']
             for frame_idx in range(start, end):
-                num = f'{frame_idx:05}'
+                num = f'{(frame_idx + 1):05}'
                 path = self.frames_dir + '/' + sample['rel_images_dir'] + '/img_' + num + '.jpg'
                 img = keras.preprocessing.image.load_img(
                     path, grayscale=False, color_mode=self.color_mode, target_size=(self.height, self.width),
