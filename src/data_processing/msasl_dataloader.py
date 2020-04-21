@@ -16,7 +16,7 @@ class MSASLDataLoader(keras.utils.Sequence):
     Essentially, it allows batch indexing on the data, and each epoch will randomy reorganize. 
     '''
 
-    def __init__(self, file_annotations, frames_dir, batch_size, width, height, color_mode='rgb', shuffle=True):
+    def __init__(self, file_annotations, frames_dir, batch_size, height, width, color_mode='rgb', shuffle=True):
         '''
         file_annotations : path
             List of files and their annotations in a text file
@@ -46,8 +46,8 @@ class MSASLDataLoader(keras.utils.Sequence):
             self.color_channels = 1
         else:
             raise Exception('Invalid Color Mode')
-        self.width = width
         self.height = height
+        self.width = width
         # Samples is a list of dictionaries containing the metadata for each sample
         # See the _make_samples() method for the keys in the dictionary
         self.samples, self.max_frames = self._make_samples(file_annotations)
@@ -69,7 +69,7 @@ class MSASLDataLoader(keras.utils.Sequence):
             data_generator[0] # will return the first batch of data
 
         Returns:
-            X : tensor (batch_size, max_frames, color_channels, width, height)
+            X : tensor (batch_size, max_frames, color_channels, height, width)
                 the data of the batch
                 TODO: Note that this is max_frames length, so there will be padded frames
                 of all zeros in many cases. 
@@ -92,14 +92,14 @@ class MSASLDataLoader(keras.utils.Sequence):
         Generates data containing batch_size samples.
 
         Returns:
-            X : tensor (batch_size, max_frames, color_channels, width, height)
+            X : tensor (batch_size, max_frames, color_channels, height, width)
                 the data of the batch
                 TODO: Note that this is max_frames length, so there will be padded frames
                 of all zeros in many cases.
             y : tensor (batch_size, )
                 the labels of the batch
         """
-        # X : (batch_size, max_frames, color_channels, width, height)
+        # X : (batch_size, max_frames, color_channels, height, width)
         # paddings : (batch_size, )
         # y : (batch_size, )
         # Initialization

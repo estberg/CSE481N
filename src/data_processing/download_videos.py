@@ -37,6 +37,7 @@ from argparse import ArgumentParser
 
 from joblib import delayed, Parallel
 import cv2
+from tqdm import tqdm
 
 
 class VideoDownloader(object):
@@ -108,12 +109,12 @@ class VideoDownloader(object):
 
         if self.num_jobs == 1:
             status_lst = []
-            for data, out_video_path in tasks:
+            for data, out_video_path in tqdm(tasks):
                 status_lst.append(self._download_video(data, out_video_path))
         else:
             status_lst = Parallel(n_jobs=self.num_jobs)(
                 delayed(self._download_video)(data, out_video_path)
-                for data, out_video_path in tasks
+                for data, out_video_path in tqdm(tasks)
             )
 
         return status_lst

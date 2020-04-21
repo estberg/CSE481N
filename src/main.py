@@ -43,8 +43,7 @@ def get_model(data_shape):
 
 # Main method, this was super loose just to try to get the code to compile, probably not the best code to test the above model. 
 def main():
-    # train_generator = MSASLDataLoader(ANNOTATION_FILE_PATH, FRAMES_DIR_PATH, 1, width=256, height=300, color_mode='rgb', shuffle=True)
-    train_generator = MSASLDataLoader(ANNOTATION_FILE_PATH_TRAIN, FRAMES_DIR_PATH, 1, width=256, height=300, color_mode='rgb', shuffle=True)
+    train_generator = MSASLDataLoader(ANNOTATION_FILE_PATH_TRAIN, FRAMES_DIR_PATH, 1, height=300, width=256, color_mode='rgb', shuffle=True)
     data_shape = train_generator.get_data_dim()
     model = get_model(data_shape)
 
