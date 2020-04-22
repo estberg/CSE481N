@@ -19,11 +19,6 @@
     ```
     At this point, your Conda should be using `slim` environment. To verify the installation of the environment, run `conda env list` or `conda info --envs`
 
-3. Install all required packages
-```
-pip install -r requirements.txt
-```
-
 ## Download and Set Up
 
 To understand `MS-ASL` dataset, read [here](data/MS-ASL/meta/README.md).
