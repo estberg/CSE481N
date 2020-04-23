@@ -5,6 +5,7 @@ __pycache__
 # Ignore downloaded video files and their frames
 /data/MS-ASL/videos/
 /data/MS-ASL/frames/
+data/MS-ASL/videos.tar.gz
 
 # Ignore gem files for Github Pages
 /docs/vendor/
