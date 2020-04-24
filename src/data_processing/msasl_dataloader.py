@@ -50,7 +50,7 @@ class MSASLDataLoader(keras.utils.Sequence):
         self.width = width
         # Samples is a list of dictionaries containing the metadata for each sample
         # See the _make_samples() method for the keys in the dictionary
-        self.samples, self.max_frames = self._make_samples(file_annotations)
+        self.samples, self.max_frames, self.min_frames = self._make_samples(file_annotations)
         self.indexes = np.arange(len(self.samples))
         self.on_epoch_end()
 
@@ -113,8 +113,8 @@ class MSASLDataLoader(keras.utils.Sequence):
             # so the image doesn't need to be loaded and padded 
             # each epoch. Then also add a function in main (or whereever)
             # to delete these files after a run (preprocessing, etc, could change)
-            start = sample['start']
-            end = sample['end']
+            start = random.randrange(sample['start'], sample['end'] - (self.min_frames - 1))
+            end = start + self.min_frames
             for frame_idx in range(start, end):
                 num = f'{(frame_idx + 1):05}'
                 path = self.frames_dir + '/' + sample['rel_images_dir'] + '/img_' + num + '.jpg'
@@ -145,6 +145,7 @@ class MSASLDataLoader(keras.utils.Sequence):
                 The maximum number of frames in a sample
         """
         max_frames = 0
+        min_frames = None
         samples = []
         with open(file_annotations) as f:
             samples_list = f.readlines()
@@ -164,14 +165,16 @@ class MSASLDataLoader(keras.utils.Sequence):
                 samples.append(labeled_annotations)
                 if duration > max_frames:
                     max_frames = duration
-        return samples, max_frames
+                if min_frames is None or duration < min_frames:
+                    min_frames = duration
+        return samples, max_frames, min_frames
     
     def get_data_dim(self):
         """
         Returns dimension of one data sample (this excludes batch size but 
         is the shape of one element of a batch)
         """
-        return (self.max_frames, self.height, self.width, self.color_channels)
+        return (self.min_frames, self.height, self.width, self.color_channels)
     
     def on_epoch_end(self):
         """
