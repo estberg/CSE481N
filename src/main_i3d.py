@@ -35,26 +35,32 @@ def main():
     train_generator = MSASLDataLoader(ANNOTATION_FILE_PATH_TRAIN, FRAMES_DIR_PATH, 1, height=300, width=256, color_mode='rgb', shuffle=True)
     data_shape = train_generator.get_data_dim()
     print(train_generator.batch_size)
-    model = get_model(train_generator, data_shape)
-    rgb_input = tf.placeholder(
+    print("Train len: {}".format(train_generator.__len__))
+    #model = get_model(train_generator, data_shape)
+    rgb_input = tf.compat.v1.placeholder(
         tf.float32,
 #hard coded frame limit for 100
-        shape=(1, 100, 300, 256, 3))
-    rgb_logits, _ = model(
+        shape=(1, 100, 224, 224, 3))
+    with tf.compat.v1.variable_scope('RGB'):
+      rgb_model = i3d.InceptionI3d(
+          NUM_CLASSES, spatial_squeeze=True, final_endpoint='Logits')
+      rgb_logits, _ = rgb_model(
           rgb_input, is_training=False, dropout_keep_prob=1.0)
+    # rgb_logits, _ = model(
+    #       rgb_input, is_training=False, dropout_keep_prob=1.0)
     rgb_variable_map = {}
-    for variable in tf.global_variables():
+    for variable in tf.compat.v1.global_variables():
         if variable.name.split('/')[0] == 'RGB':
             rgb_variable_map[variable.name.replace(':0', '')[len('RGB/inception_i3d/'):]] = variable
-    rgb_saver = tf.train.Saver(var_list=rgb_variable_map, reshape=True)
+    rgb_saver = tf.compat.v1.train.Saver(var_list=rgb_variable_map, reshape=True)
     model_logits = rgb_logits
     model_predictions = tf.nn.softmax(model_logits)
 
     # train the model
-    train_info = model.fit_generator(generator=train_generator, epochs=EPOCHS)
+    #train_info = model.fit_generator(generator=train_generator, epochs=EPOCHS)
     
     # train_info.history includes loss and accuracy of the model from each epoch
-    print(train_info.history)
+    # print(train_info.history)
 
 if __name__ == '__main__':
     main()
