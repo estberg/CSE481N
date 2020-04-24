@@ -24,14 +24,14 @@ EPOCHS = 5
 def get_model(data_shape):
 
     input_layer = Input(shape=data_shape, name="input_layer")
-    # data_shape = (max_frames, color_channels, height, width)
+    # data_shape = (max_frames, height, width, color_channels)
     layer_1 = Lambda(lambda x: tf.math.reduce_max(x, axis=0), input_shape=data_shape, output_shape=data_shape[1:], name="layer_1")(input_layer)
-    # data_shape = (color_channels, height, width)
-    layer_2 = Lambda(lambda x: tf.math.reduce_max(x, axis=0), input_shape=data_shape[1:], output_shape=data_shape[2:], name="layer_2")(layer_1)
-    # data_shape = (height, width)
+    # data_shape = (height, width, color_channels)
+    layer_2 = Lambda(lambda x: tf.math.reduce_sum(x, axis=0), input_shape=data_shape[1:], output_shape=data_shape[2:], name="layer_2")(layer_1)
+    # data_shape = (width. color_channels)
     layer_3 = Lambda(lambda x: tf.math.reduce_sum(x, axis=0), input_shape=data_shape[2:], output_shape=data_shape[3:], name="layer_3")(layer_2)
-    # data_shape = (width)
-    layer_4 = Lambda(lambda x: tf.math.reduce_sum(x, axis=0) % 1000, input_shape=data_shape[3:], output_shape=[1,], name="layer_4")(layer_3)
+    # data_shape = (color_channels)
+    layer_4 = Lambda(lambda x: tf.math.reduce_max(x, axis=0) % 1000, input_shape=data_shape[3:], output_shape=[1,], name="layer_4")(layer_3)
 
     model = Model(input_layer, layer_4, name="model")
     model.summary()

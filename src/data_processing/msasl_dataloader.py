@@ -122,7 +122,7 @@ class MSASLDataLoader(keras.utils.Sequence):
                     path, grayscale=False, color_mode=self.color_mode, target_size=(self.height, self.width),
                     interpolation='nearest'
                 )
-                x_ = keras.preprocessing.image.img_to_array(img, data_format='channels_first', dtype=int)
+                x_ = keras.preprocessing.image.img_to_array(img, data_format='channels_last', dtype=int)
                 X[idx, frame_idx - start, ] = x_
 
             # Store class
@@ -171,7 +171,7 @@ class MSASLDataLoader(keras.utils.Sequence):
         Returns dimension of one data sample (this excludes batch size but 
         is the shape of one element of a batch)
         """
-        return (self.max_frames, self.color_channels, self.height, self.width)
+        return (self.max_frames, self.height, self.width, self.color_channels)
     
     def on_epoch_end(self):
         """
