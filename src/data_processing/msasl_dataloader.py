@@ -69,7 +69,7 @@ class MSASLDataLoader(keras.utils.Sequence):
             data_generator[0] # will return the first batch of data
 
         Returns:
-            X : tensor (batch_size, max_frames, color_channels, height, width)
+            X : tensor (batch_size, max_frames, height, width, color_channels)
                 the data of the batch
                 TODO: Note that this is max_frames length, so there will be padded frames
                 of all zeros in many cases. 
@@ -92,14 +92,14 @@ class MSASLDataLoader(keras.utils.Sequence):
         Generates data containing batch_size samples.
 
         Returns:
-            X : tensor (batch_size, max_frames, color_channels, height, width)
+            X : tensor (batch_size, max_frames, height, width, color_channels)
                 the data of the batch
                 TODO: Note that this is max_frames length, so there will be padded frames
                 of all zeros in many cases.
             y : tensor (batch_size, )
                 the labels of the batch
         """
-        # X : (batch_size, max_frames, color_channels, height, width)
+        # X : (batch_size, max_frames, height, width, color_channels)
         # paddings : (batch_size, )
         # y : (batch_size, )
         # Initialization
