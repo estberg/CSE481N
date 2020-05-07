@@ -83,8 +83,9 @@ def main():
     for k in args.topk:
         for annot_path in records:
             filtered_records = filter_records(records[annot_path], k)
-
+            print(len(filtered_records))
             out_path = '{}{}.txt'.format(annot_path[:-len('.txt')], k)
+            print(out_path)
             dump_records(filtered_records, out_path)
 
 

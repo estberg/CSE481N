@@ -10,10 +10,10 @@ import json
 
 # The path containing the information about samples. 
 ANNOTATION_FILE_PATH = 'data/MS-ASL/frames/tiny.txt'
-ANNOTATION_FILE_PATH_TRAIN = 'data/MS-ASL/frames/train.txt'
+ANNOTATION_FILE_PATH_TRAIN = 'data/MS-ASL/frames224/train100.txt'
 
 # The path containing the directories containing each samples frames. 
-FRAMES_DIR_PATH = 'data/MS-ASL/frames/global_crops'
+FRAMES_DIR_PATH = 'data/MS-ASL/frames224/global_crops'
 
 # The path containing checkponts
 CHECKPOINT_PATHS = {
@@ -34,11 +34,11 @@ EPOCHS = 5
 
 # Minimum frames seems to be 28. 
 # The Train Generator will only take samples with at least this many frames. 
-FRAME_LIMIT = 28
+FRAME_LIMIT = 64
 
 # Main method, this was super loose just to try to get the code to compile, probably not the best code to test the above model. 
 def main():
-    train_generator = MSASLDataLoader(ANNOTATION_FILE_PATH_TRAIN, FRAMES_DIR_PATH, 1, height=224, width=224, color_mode='rgb', shuffle=True, frames_threshold=FRAME_LIMIT)
+    train_generator = MSASLDataLoader(ANNOTATION_FILE_PATH_TRAIN, FRAMES_DIR_PATH, 1, height=224, width=224, color_mode='rgb', shuffle=True, frames_threshold=FRAME_LIMIT, num_classes=NUM_CLASSES)
     data_shape = train_generator.get_data_dim()
 
     # kinetics_classes = [x.strip() for x in open(LABEL_MAP_PATH)]
@@ -78,26 +78,59 @@ def main():
         feed_dict = {}
         tf.compat.v1.global_variables_initializer()
         rgb_saver.restore(sess, CHECKPOINT_PATHS['rgb'])
-        sess.run(tf.variables_initializer(list(unloaded_layers_to_init.values())))
+        sess.run(tf.compat.v1.variables_initializer(list(unloaded_layers_to_init.values())))
         tf.compat.v1.logging.info('RGB checkpoint restored')
         rgb_variable_map.update(unloaded_layers_to_init)
-        rgb_sample = train_generator[0][0]
+        rgb_saver = tf.compat.v1.train.Saver(var_list=rgb_variable_map, reshape=True)
+        
+        # Testing
+        # rgb_sample = train_generator[0][0]
 
-        tf.compat.v1.logging.info('RGB data loaded, shape=%s', str(rgb_sample.shape))
-        feed_dict[rgb_input] = rgb_sample
+        # tf.compat.v1.logging.info('RGB data loaded, shape=%s', str(rgb_sample.shape))
+        # feed_dict[rgb_input] = rgb_sample
 
-        out_logits, out_predictions = sess.run(
-          [model_logits, model_predictions],
-          feed_dict=feed_dict)
+        # out_logits, out_predictions = sess.run(
+        #   [model_logits, model_predictions],
+        #   feed_dict=feed_dict)
 
-        out_logits = out_logits[0]
-        out_predictions = out_predictions[0]
-        sorted_indices = np.argsort(out_predictions)[::-1]
-        print('Norm of logits: %f' % np.linalg.norm(out_logits))
-        print('\nTop classes and probabilities')
-        for index in sorted_indices[:20]:
-            print(out_predictions[index], out_logits[index], msasl_classes[index])
+        # out_logits = out_logits[0]
+        # out_predictions = out_predictions[0]
+        # sorted_indices = np.argsort(out_predictions)[::-1]
+        # print('Norm of logits: %f' % np.linalg.norm(out_logits))
+        # print('\nTop classes and probabilities')
+        # for index in sorted_indices[:20]:
+        #     print(out_predictions[index], out_logits[index], msasl_classes[index])
             
+        # model_logits = rgb_model(
+        #   rgb_input, is_training=True, dropout_keep_prob=1.0)
+        # model_predictions = tf.nn.softmax(model_logits)
+
+        rgb_logits, _ = rgb_model(
+          rgb_input, is_training=True, dropout_keep_prob=1.0)
+        rgb_labels = tf.placeholder(tf.float32, [None, NUM_CLASSES])
+        
+        loss = tf.compat.v1.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=rgb_logits, labels=rgb_labels))
+        optimizer = tf.compat.v1.train.GradientDescentOptimizer(learning_rate=0.9).minimize(loss)
+
+        def step(samples, labels):
+            """Performs one optimizer step on a single mini-batch."""
+            feed_dict[rgb_input] = samples
+            feed_dict[rgb_labels] = labels
+            sess.run(
+                optimizer,
+                feed_dict=feed_dict)
+
+        def epoch(data_generator):
+            print(len(train_generator))
+            for images, labels in data_generator:
+                step(images, labels)
+            data_generator.on_epoch_end()
+        
+        for i in range(EPOCHS):
+            epoch(train_generator)
+
+        # print("\n\nFinal loss: {}".format(loss.numpy()))
+        
     # train the model
     # train_info = model.fit_generator(generator=train_generator, epochs=EPOCHS)
     

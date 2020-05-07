@@ -16,7 +16,7 @@ class MSASLDataLoader(keras.utils.Sequence):
     Essentially, it allows batch indexing on the data, and each epoch will randomy reorganize. 
     '''
 
-    def __init__(self, file_annotations, frames_dir, batch_size, height, width, color_mode='rgb', shuffle=True, frames_threshold=0):
+    def __init__(self, file_annotations, frames_dir, batch_size, height, width, color_mode='rgb', shuffle=True, frames_threshold=0, num_classes=100):
         '''
         file_annotations : path
             List of files and their annotations in a text file
@@ -49,6 +49,7 @@ class MSASLDataLoader(keras.utils.Sequence):
         self.height = height
         self.width = width
         self.frames_threshold = frames_threshold
+        self.num_classes = num_classes
         # Samples is a list of dictionaries containing the metadata for each sample
         # See the _make_samples() method for the keys in the dictionary
         self.samples, self.max_frames, self.min_frames = self._make_samples(file_annotations)
@@ -112,7 +113,7 @@ class MSASLDataLoader(keras.utils.Sequence):
         # Initialization
         X = np.empty((self.batch_size, *self.get_data_dim()))
         paddings = np.empty((self.batch_size), dtype=int)
-        y = np.empty((self.batch_size), dtype=int)
+        y = np.empty((self.batch_size, self.num_classes), dtype=int)
 
         # Load Images, (Do Preprocessing?)
         for idx, sample in tqdm(enumerate(batch_samples_idxs), desc='Loading Batch Images'):
@@ -120,8 +121,8 @@ class MSASLDataLoader(keras.utils.Sequence):
             # so the image doesn't need to be loaded and padded 
             # each epoch. Then also add a function in main (or whereever)
             # to delete these files after a run (preprocessing, etc, could change)
-            start = random.randrange(sample['start'], sample['end'] - (self.min_frames - 1))
-            end = start + self.min_frames
+            start = random.randrange(sample['start'], sample['end'] - (self.frames_per_sample - 1))
+            end = start + self.frames_per_sample
             for frame_idx in range(start, end):
                 num = f'{(frame_idx + 1):05}'
                 path = self.frames_dir + '/' + sample['rel_images_dir'] + '/img_' + num + '.jpg'
@@ -133,7 +134,7 @@ class MSASLDataLoader(keras.utils.Sequence):
                 X[idx, frame_idx - start, ] = x_
 
             # Store class
-            y[idx] = sample['label']
+            y[idx][sample['label']] = 1
             
             # cannot return now, but might come in handy later (?)
             paddings[idx] = self.max_frames - frame_idx
@@ -161,12 +162,16 @@ class MSASLDataLoader(keras.utils.Sequence):
                 labeled_annotations = dict()
                 labeled_annotations['rel_images_dir'] = annotations[0]
                 labeled_annotations['label'] = int(annotations[1])
-                start = int(annotations[2])
-                end = int(annotations[3])
+                # TODO: I am not sure about this
+                # start = int(annotations[2])
+                # end = int(annotations[3])
+                start = int(annotations[4])
+                end = int(annotations[5])
                 duration = end - start
                 labeled_annotations['start'] = start
                 labeled_annotations['end'] = end
                 labeled_annotations['duration'] = duration
+                # print(duration)
                 labeled_annotations['total_duration'] = int(annotations[5])
                 labeled_annotations['fps'] = float(annotations[6])
                 samples.append(labeled_annotations)
