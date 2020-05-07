@@ -30,7 +30,7 @@ MSASL_LABEL_JSON = 'data/MS-ASL/meta/MSASL_classes100.json'
 # We are taking the top-100 classes
 NUM_CLASSES = 100 
 
-BATCH_SIZE = 8
+BATCH_SIZE = 1
 
 # Number of epochs to train data
 EPOCHS = 5
@@ -79,42 +79,55 @@ def main():
 
     with tf.compat.v1.Session() as sess: 
         feed_dict = {}
-        tf.compat.v1.global_variables_initializer()
+        
+        # Restore all the layers but the logits from the shared weights.
         rgb_saver.restore(sess, CHECKPOINT_PATHS['rgb'])
-        sess.run(tf.compat.v1.variables_initializer(list(unloaded_layers_to_init.values())))
         tf.compat.v1.logging.info('RGB checkpoint restored')
+
+        # Initialize the logits (final layer). Not sure exactly how they will be initialized.
+        # TODO: Look into how the logits will be initialized. Could try different approaches.
+        sess.run(tf.compat.v1.variables_initializer(list(unloaded_layers_to_init.values())))
+        
+        # Preparing a new saver on all the layers to save weights as we train.
+        # TODO: Use this saver to save in training.
         rgb_variable_map.update(unloaded_layers_to_init)
         rgb_saver = tf.compat.v1.train.Saver(var_list=rgb_variable_map, reshape=True)
         
-        # Testing
-        # rgb_sample = train_generator[0][0]
+        # Testing / Predicting
+        # This is the old testing predicting code that was given on kinectics-i3d site.
+        '''
+        rgb_sample = train_generator[0][0]
 
-        # tf.compat.v1.logging.info('RGB data loaded, shape=%s', str(rgb_sample.shape))
-        # feed_dict[rgb_input] = rgb_sample
+        tf.compat.v1.logging.info('RGB data loaded, shape=%s', str(rgb_sample.shape))
+        feed_dict[rgb_input] = rgb_sample
 
-        # out_logits, out_predictions = sess.run(
-        #   [model_logits, model_predictions],
-        #   feed_dict=feed_dict)
+        out_logits, out_predictions = sess.run(
+          [model_logits, model_predictions],
+          feed_dict=feed_dict)
 
-        # out_logits = out_logits[0]
-        # out_predictions = out_predictions[0]
-        # sorted_indices = np.argsort(out_predictions)[::-1]
-        # print('Norm of logits: %f' % np.linalg.norm(out_logits))
-        # print('\nTop classes and probabilities')
-        # for index in sorted_indices[:20]:
-        #     print(out_predictions[index], out_logits[index], msasl_classes[index])
+        out_logits = out_logits[0]
+        out_predictions = out_predictions[0]
+        sorted_indices = np.argsort(out_predictions)[::-1]
+        print('Norm of logits: %f' % np.linalg.norm(out_logits))
+        print('\nTop classes and probabilities')
+        for index in sorted_indices[:20]:
+            print(out_predictions[index], out_logits[index], msasl_classes[index])
             
-        # model_logits = rgb_model(
-        #   rgb_input, is_training=True, dropout_keep_prob=1.0)
-        # model_predictions = tf.nn.softmax(model_logits)
+        model_logits = rgb_model(
+          rgb_input, is_training=True, dropout_keep_prob=1.0)
+        model_predictions = tf.nn.softmax(model_logits)
+        '''
 
+        # input and output shapes
         rgb_logits, _ = rgb_model(
           rgb_input, is_training=True, dropout_keep_prob=1.0)
         rgb_labels = tf.compat.v1.placeholder(tf.float32, [None, NUM_CLASSES])
         
+        # Loss and optimizer to use
         loss = tf.nn.softmax_cross_entropy_with_logits_v2(logits=rgb_logits, labels=rgb_labels)
         optimizer = tf.compat.v1.train.GradientDescentOptimizer(learning_rate=0.9).minimize(loss)
 
+        # One step or batch of training.
         def step(samples, labels):
             """Performs one optimizer step on a single mini-batch."""
             feed_dict[rgb_input] = samples
@@ -122,8 +135,10 @@ def main():
             result = sess.run(
                 [loss, optimizer],
                 feed_dict=feed_dict)
+            print(result)
             return result
 
+        # One epoch of training
         def epoch(data_generator, i):
             for images, labels in tqdm(data_generator, desc='EPOCH' + str(i)):
                 result = step(images, labels)
