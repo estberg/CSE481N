@@ -10,3 +10,6 @@ data/MS-ASL/videos.tar.gz
 
 # Ignore gem files for Github Pages
 /docs/vendor/
+
+# Checkpoints are big. Ignore them in github
+/data/checkpoints/
