@@ -4,6 +4,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  - dm-sonnet=1.36
   - ffmpeg=4.0
   - joblib=0.14.1
   - keras=2.3.1

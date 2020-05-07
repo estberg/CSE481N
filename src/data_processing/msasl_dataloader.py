@@ -16,7 +16,7 @@ class MSASLDataLoader(keras.utils.Sequence):
     Essentially, it allows batch indexing on the data, and each epoch will randomy reorganize. 
     '''
 
-    def __init__(self, file_annotations, frames_dir, batch_size, height, width, color_mode='rgb', shuffle=True):
+    def __init__(self, file_annotations, frames_dir, batch_size, height, width, color_mode='rgb', shuffle=True, frames_threshold=0):
         '''
         file_annotations : path
             List of files and their annotations in a text file
@@ -48,9 +48,16 @@ class MSASLDataLoader(keras.utils.Sequence):
             raise Exception('Invalid Color Mode')
         self.height = height
         self.width = width
+        self.frames_threshold = frames_threshold
         # Samples is a list of dictionaries containing the metadata for each sample
         # See the _make_samples() method for the keys in the dictionary
         self.samples, self.max_frames, self.min_frames = self._make_samples(file_annotations)
+        self.frames_per_sample = max(self.frames_threshold, self.min_frames)
+        trimmed_samples = []
+        for sample in self.samples:
+                if sample['duration'] >= self.frames_per_sample:
+                    trimmed_samples.append(sample)
+        self.samples = trimmed_samples
         self.indexes = np.arange(len(self.samples))
         self.on_epoch_end()
 
@@ -174,7 +181,7 @@ class MSASLDataLoader(keras.utils.Sequence):
         Returns dimension of one data sample (this excludes batch size but 
         is the shape of one element of a batch)
         """
-        return (self.min_frames, self.height, self.width, self.color_channels)
+        return (self.frames_per_sample, self.height, self.width, self.color_channels)
     
     def on_epoch_end(self):
         """
