@@ -7,6 +7,7 @@ import numpy as np
 import i3d
 import sonnet as snt
 import json
+from tqdm import tqdm
 
 # The path containing the information about samples. 
 ANNOTATION_FILE_PATH = 'data/MS-ASL/frames/tiny.txt'
@@ -29,6 +30,8 @@ MSASL_LABEL_JSON = 'data/MS-ASL/meta/MSASL_classes100.json'
 # We are taking the top-100 classes
 NUM_CLASSES = 100 
 
+BATCH_SIZE = 8
+
 # Number of epochs to train data
 EPOCHS = 5
 
@@ -38,7 +41,7 @@ FRAME_LIMIT = 64
 
 # Main method, this was super loose just to try to get the code to compile, probably not the best code to test the above model. 
 def main():
-    train_generator = MSASLDataLoader(ANNOTATION_FILE_PATH_TRAIN, FRAMES_DIR_PATH, 1, height=224, width=224, color_mode='rgb', shuffle=True, frames_threshold=FRAME_LIMIT, num_classes=NUM_CLASSES)
+    train_generator = MSASLDataLoader(ANNOTATION_FILE_PATH_TRAIN, FRAMES_DIR_PATH, batch_size=BATCH_SIZE, height=224, width=224, color_mode='rgb', shuffle=True, frames_threshold=FRAME_LIMIT, num_classes=NUM_CLASSES)
     data_shape = train_generator.get_data_dim()
 
     # kinetics_classes = [x.strip() for x in open(LABEL_MAP_PATH)]
@@ -47,7 +50,7 @@ def main():
     rgb_input = tf.compat.v1.placeholder(
         tf.float32,
         # i3d only accepts 224 x 224 image for now
-        shape=(1, FRAME_LIMIT, 224, 224, 3))
+        shape=(BATCH_SIZE, FRAME_LIMIT, 224, 224, 3))
     with tf.compat.v1.variable_scope('RGB'):
       rgb_model = i3d.InceptionI3d(
           NUM_CLASSES, spatial_squeeze=True, final_endpoint='Logits')
@@ -107,27 +110,28 @@ def main():
 
         rgb_logits, _ = rgb_model(
           rgb_input, is_training=True, dropout_keep_prob=1.0)
-        rgb_labels = tf.placeholder(tf.float32, [None, NUM_CLASSES])
+        rgb_labels = tf.compat.v1.placeholder(tf.float32, [None, NUM_CLASSES])
         
-        loss = tf.compat.v1.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=rgb_logits, labels=rgb_labels))
+        loss = tf.nn.softmax_cross_entropy_with_logits_v2(logits=rgb_logits, labels=rgb_labels)
         optimizer = tf.compat.v1.train.GradientDescentOptimizer(learning_rate=0.9).minimize(loss)
 
         def step(samples, labels):
             """Performs one optimizer step on a single mini-batch."""
             feed_dict[rgb_input] = samples
             feed_dict[rgb_labels] = labels
-            sess.run(
-                optimizer,
+            result = sess.run(
+                [loss, optimizer],
                 feed_dict=feed_dict)
+            return result
 
-        def epoch(data_generator):
-            print(len(train_generator))
-            for images, labels in data_generator:
-                step(images, labels)
+        def epoch(data_generator, i):
+            for images, labels in tqdm(data_generator, desc='EPOCH' + str(i)):
+                result = step(images, labels)
             data_generator.on_epoch_end()
+            print("Loss" + str(result[0]))
         
         for i in range(EPOCHS):
-            epoch(train_generator)
+            epoch(train_generator, i)
 
         # print("\n\nFinal loss: {}".format(loss.numpy()))
         

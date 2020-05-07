@@ -116,7 +116,8 @@ class MSASLDataLoader(keras.utils.Sequence):
         y = np.empty((self.batch_size, self.num_classes), dtype=int)
 
         # Load Images, (Do Preprocessing?)
-        for idx, sample in tqdm(enumerate(batch_samples_idxs), desc='Loading Batch Images'):
+        # for idx, sample in tqdm(enumerate(batch_samples_idxs), desc='Loading Batch Images'):
+        for idx, sample in enumerate(batch_samples_idxs):
             # TODO: add a step that saves the loaded numpy array 
             # so the image doesn't need to be loaded and padded 
             # each epoch. Then also add a function in main (or whereever)
