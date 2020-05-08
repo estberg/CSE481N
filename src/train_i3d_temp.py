@@ -11,7 +11,7 @@ print("    Sonnet version: {}".format(snt.__version__))
 
 # The path containing the information about samples. 
 ANNOTATION_FILE_PATH = 'data/MS-ASL/frames/tiny.txt'
-ANNOTATION_FILE_PATH_TRAIN = 'data/MS-ASL/frames224/train.txt'
+ANNOTATION_FILE_PATH_TRAIN = 'data/MS-ASL/frames224/train100.txt'
 
 # The path containing the directories containing each samples frames. 
 FRAMES_DIR_PATH = 'data/MS-ASL/frames224/global_crops'
@@ -35,7 +35,7 @@ with tf.name_scope('RGB'):
 X_train, y_train = train_generator[0]
 print(train_generator[1])
 print("Y_Train: ")
-y_train[0] = 2
+print(y_train.shape)
 print(y_train)
 X_train = tf.cast(X_train, tf.float32)
 print('X SHAPE ' + str(X_train.shape))

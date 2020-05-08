@@ -53,7 +53,8 @@ class MSASLDataLoader(keras.utils.Sequence):
         # Samples is a list of dictionaries containing the metadata for each sample
         # See the _make_samples() method for the keys in the dictionary
         self.samples, self.max_frames, self.min_frames = self._make_samples(file_annotations)
-        self.frames_per_sample = max(self.frames_threshold, self.min_frames)
+        # self.frames_per_sample = max(self.frames_threshold, self.min_frames)
+        self.frames_per_sample = self.frames_threshold
         trimmed_samples = []
         for sample in self.samples:
                 if sample['duration'] >= self.frames_per_sample:
@@ -113,7 +114,7 @@ class MSASLDataLoader(keras.utils.Sequence):
         # Initialization
         X = np.empty((self.batch_size, *self.get_data_dim()))
         paddings = np.empty((self.batch_size), dtype=int)
-        y = np.empty((self.batch_size, self.num_classes), dtype=int)
+        y = np.zeros((self.batch_size, self.num_classes), dtype=int)
 
         # Load Images, (Do Preprocessing?)
         # for idx, sample in tqdm(enumerate(batch_samples_idxs), desc='Loading Batch Images'):
@@ -131,7 +132,9 @@ class MSASLDataLoader(keras.utils.Sequence):
                     path, grayscale=False, color_mode=self.color_mode, target_size=(self.height, self.width),
                     interpolation='nearest'
                 )
-                x_ = keras.preprocessing.image.img_to_array(img, data_format='channels_last', dtype=int)
+                x_ = keras.preprocessing.image.img_to_array(img, data_format='channels_last')
+                # convert range to [-1.0, 1.0]
+                x_ = x_ / 255.0 * 2 - 1
                 X[idx, frame_idx - start, ] = x_
 
             # Store class
