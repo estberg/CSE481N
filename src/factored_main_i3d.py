@@ -124,6 +124,7 @@ def train_from_kinetics_weights(train_generator, validation_generator, data_shap
                 feed_dict=feed_dict)
             return result
 
+        # TODO: Should this be running loss and need to be fixed?
         # One epoch of training
         def epoch(data_generator, i):
             for images, labels in tqdm(data_generator, desc='EPOCH' + str(i)):
@@ -156,7 +157,7 @@ def validate(sess, validation_generator, rgb_model, rgb_input, data_set):
             [val_logits, val_predictions],
             feed_dict=feed_dict)
         batch_accuracy, batch_accuracy_opp = tf.compat.v1.metrics.accuracy(out_labels, true_labels)
-        sess.run(tf.local_variables_initializer())
+        sess.run(tf.compat.v1.local_variables_initializer())
         v = sess.run([batch_accuracy, batch_accuracy_opp], feed_dict={out_labels:out_predictions,
                                        true_labels:labels})
         return v[1]
