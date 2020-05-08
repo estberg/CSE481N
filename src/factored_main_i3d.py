@@ -37,13 +37,13 @@ NUM_CLASSES = 100
 BATCH_SIZE = 8
 
 # Number of epochs to train data
-EPOCHS = 5
+EPOCHS = 100
 
 # Minimum frames seems to be 28. 
 # The Train Generator will only take samples with at least this many frames. 
 FRAME_LIMIT = 64
 
-# Main method, this was super loose just to try to get the code to compile, probably not the best code to test the above model. 
+# Main method makes a train and validation set generator
 def main():
     train_generator = MSASLDataLoader(ANNOTATION_FILE_PATH_TRAIN, FRAMES_DIR_PATH, batch_size=BATCH_SIZE, height=224, width=224, color_mode='rgb', shuffle=True, frames_threshold=FRAME_LIMIT, num_classes=NUM_CLASSES)
     validation_generator = MSASLDataLoader(ANNOTATION_FILE_PATH_VAL, FRAMES_DIR_PATH, batch_size=BATCH_SIZE, height=224, width=224, color_mode='rgb', shuffle=True, frames_threshold=FRAME_LIMIT, num_classes=NUM_CLASSES)
@@ -57,10 +57,13 @@ def main():
         # i3d only accepts 224 x 224 image for now
         shape=(BATCH_SIZE, FRAME_LIMIT, 224, 224, 3))
 
-    train_from_kinetics_weights(train_generator, validation_generator, data_shape, msasl_classes, rgb_input)
+    train_from_kinetics_weights(train_generator, validation_generator, msasl_classes, rgb_input)
 
 
-def train_from_kinetics_weights(train_generator, validation_generator, data_shape, msasl_classes, rgb_input):
+def train_from_kinetics_weights(train_generator, validation_generator, msasl_classes, rgb_input):
+    '''
+    Trains for EPOCH on the train_generator's data and tests the validation set. 
+    '''
     with tf.compat.v1.variable_scope('RGB'):
       rgb_model = i3d.InceptionI3d(
           NUM_CLASSES, spatial_squeeze=True, final_endpoint='Logits')
@@ -110,9 +113,10 @@ def train_from_kinetics_weights(train_generator, validation_generator, data_shap
         
         # Loss and optimizer to use
         # TODO: Try with different loss functions and optimizers
+        # TODO: Try with a more reasonable learning rate
         # loss = tf.nn.softmax_cross_entropy_with_logits_v2(logits=rgb_logits, labels=rgb_labels)
         loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=rgb_logits, labels=rgb_labels))
-        optimizer = tf.compat.v1.train.GradientDescentOptimizer(learning_rate=0.9).minimize(loss)
+        optimizer = tf.compat.v1.train.GradientDescentOptimizer(learning_rate=0.01).minimize(loss)
 
         # One step or batch of training.
         def step(samples, labels):
@@ -134,9 +138,11 @@ def train_from_kinetics_weights(train_generator, validation_generator, data_shap
         
         for i in range(EPOCHS):
             epoch(train_generator, i)
-            train_accuracy = validate(sess, train_generator, rgb_model, rgb_input, 'Train')
-            val_accuracy = validate(sess, validation_generator, rgb_model, rgb_input, 'Validation')
-            rgb_saver.save(sess, NEW_CHECKPOINT_PATHS + NAME, global_step=i)
+            if i % 10 == 0:
+                train_accuracy = validate(sess, train_generator, rgb_model, rgb_input, 'Train')
+            if i % 2 == 0:
+                val_accuracy = validate(sess, validation_generator, rgb_model, rgb_input, 'Validation')
+            rgb_saver.save(sess, NEW_CHECKPOINT_PATHS + NAME + str(val_accuracy), global_step=i)
 
 
 def validate(sess, validation_generator, rgb_model, rgb_input, data_set):

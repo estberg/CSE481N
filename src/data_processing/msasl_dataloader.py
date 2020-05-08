@@ -105,15 +105,13 @@ class MSASLDataLoader(keras.utils.Sequence):
                 the data of the batch
                 TODO: Note that this is max_frames length, so there will be padded frames
                 of all zeros in many cases.
-            y : tensor (batch_size, )
-                the labels of the batch
+            y : tensor (batch_size, num_classes)
+                the labels of the batch as one-hot encodings
         """
         # X : (batch_size, max_frames, height, width, color_channels)
-        # paddings : (batch_size, )
-        # y : (batch_size, )
+        # y : (batch_size, num_classes)
         # Initialization
         X = np.empty((self.batch_size, *self.get_data_dim()))
-        paddings = np.empty((self.batch_size), dtype=int)
         y = np.zeros((self.batch_size, self.num_classes), dtype=int)
 
         # Load Images, (Do Preprocessing?)
@@ -139,9 +137,6 @@ class MSASLDataLoader(keras.utils.Sequence):
 
             # Store class
             y[idx][sample['label']] = 1
-            
-            # cannot return now, but might come in handy later (?)
-            paddings[idx] = self.max_frames - frame_idx
 
         return X, y
     
@@ -166,7 +161,7 @@ class MSASLDataLoader(keras.utils.Sequence):
                 labeled_annotations = dict()
                 labeled_annotations['rel_images_dir'] = annotations[0]
                 labeled_annotations['label'] = int(annotations[1])
-                # TODO: I am not sure about this
+                # TODO: I am not sure about this start and end.
                 # start = int(annotations[2])
                 # end = int(annotations[3])
                 start = int(annotations[4])
