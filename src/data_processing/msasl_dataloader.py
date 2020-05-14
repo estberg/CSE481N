@@ -16,7 +16,7 @@ class MSASLDataLoader(keras.utils.Sequence):
     Essentially, it allows batch indexing on the data, and each epoch will randomy reorganize. 
     '''
 
-    def __init__(self, file_annotations, frames_dir, batch_size, height, width, color_mode='rgb', shuffle=True, frames_threshold=0, num_classes=100):
+    def __init__(self, file_annotations, frames_dir, batch_size, height, width, color_mode='rgb', shuffle=True, frames_threshold=0, stretch_samples=True, num_classes=100):
         '''
         file_annotations : path
             List of files and their annotations in a text file
@@ -56,10 +56,11 @@ class MSASLDataLoader(keras.utils.Sequence):
         # self.frames_per_sample = max(self.frames_threshold, self.min_frames)
         self.frames_per_sample = self.frames_threshold
         trimmed_samples = []
-        for sample in self.samples:
+        if stretch_samples == False:
+            for sample in self.samples:
                 if sample['duration'] >= self.frames_per_sample:
                     trimmed_samples.append(sample)
-        self.samples = trimmed_samples
+                self.samples = trimmed_samples
         self.indexes = np.arange(len(self.samples))
         self.on_epoch_end()
 
@@ -162,10 +163,10 @@ class MSASLDataLoader(keras.utils.Sequence):
                 labeled_annotations['rel_images_dir'] = annotations[0]
                 labeled_annotations['label'] = int(annotations[1])
                 # TODO: I am not sure about this start and end.
-                # start = int(annotations[2])
-                # end = int(annotations[3])
-                start = int(annotations[4])
-                end = int(annotations[5])
+                start = int(annotations[2])
+                end = int(annotations[3])
+                # start = int(annotations[4])
+                # end = int(annotations[5])
                 duration = end - start
                 labeled_annotations['start'] = start
                 labeled_annotations['end'] = end
