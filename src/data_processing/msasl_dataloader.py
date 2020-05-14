@@ -56,7 +56,7 @@ class MSASLDataLoader(keras.utils.Sequence):
         # self.frames_per_sample = max(self.frames_threshold, self.min_frames)
         self.frames_per_sample = self.frames_threshold
         trimmed_samples = []
-        if stretch_samples == False:
+        if not stretch_samples:
             for sample in self.samples:
                 if sample['duration'] >= self.frames_per_sample:
                     trimmed_samples.append(sample)
@@ -118,29 +118,58 @@ class MSASLDataLoader(keras.utils.Sequence):
         # Load Images, (Do Preprocessing?)
         # for idx, sample in tqdm(enumerate(batch_samples_idxs), desc='Loading Batch Images'):
         for idx, sample in enumerate(batch_samples_idxs):
+            i = 0
             # TODO: add a step that saves the loaded numpy array 
             # so the image doesn't need to be loaded and padded 
             # each epoch. Then also add a function in main (or whereever)
             # to delete these files after a run (preprocessing, etc, could change)
-            start = random.randrange(sample['start'], sample['end'] - (self.frames_per_sample - 1))
-            end = start + self.frames_per_sample
-            for frame_idx in range(start, end):
-                num = f'{(frame_idx + 1):05}'
-                path = self.frames_dir + '/' + sample['rel_images_dir'] + '/img_' + num + '.jpg'
-                img = keras.preprocessing.image.load_img(
-                    path, grayscale=False, color_mode=self.color_mode, target_size=(self.height, self.width),
-                    interpolation='nearest'
-                )
-                x_ = keras.preprocessing.image.img_to_array(img, data_format='channels_last')
-                # convert range to [-1.0, 1.0]
-                x_ = x_ / 255.0 * 2 - 1
-                X[idx, frame_idx - start, ] = x_
+            
+            # Simple case -- the sample has enough frames
+            if sample['duration'] >= self.frames_per_sample:
+                start = random.randrange(sample['start'], sample['end'] - (self.frames_per_sample - 1))
+                end = start + self.frames_per_sample
+                for frame_idx in range(start, end):
+                    self._insert_frame_to_X(X, idx, sample, frame_idx, frame_idx - start)
+                    i += 1
+
+            # Stretching case -- the sample does not have enough frames
+            else:
+                start = sample['start']
+                end = sample['end']
+                duration = end - start
+                stretch = self.frames_per_sample - duration
+                front_stretch = bool(random.getrandbits(1))
+                front_stretch_frames = 0
+                if front_stretch:
+                    front_stretch_frames = stretch
+                    for insert_idx in range(0, stretch):
+                        self._insert_frame_to_X(X, idx, sample, start, insert_idx)
+                        i += 1
+                for frame_idx in range(start, end):
+                    self._insert_frame_to_X(X, idx, sample, frame_idx, front_stretch_frames + frame_idx - start)
+                    i += 1
+                if not front_stretch:
+                    for insert_idx in range(duration, self.frames_per_sample):
+                        self._insert_frame_to_X(X, idx, sample, end - 1, insert_idx)
+                        i += 1
 
             # Store class
             y[idx][sample['label']] = 1
 
         return X, y
     
+    def _insert_frame_to_X(self, X, idx, sample, frame_idx, insert_idx):
+        num = f'{(frame_idx + 1):05}'
+        path = self.frames_dir + '/' + sample['rel_images_dir'] + '/img_' + num + '.jpg'
+        img = keras.preprocessing.image.load_img(
+            path, grayscale=False, color_mode=self.color_mode, target_size=(self.height, self.width),
+            interpolation='nearest'
+        )
+        x_ = keras.preprocessing.image.img_to_array(img, data_format='channels_last')
+        # convert range to [-1.0, 1.0]
+        x_ = x_ / 255.0 * 2 - 1
+        X[idx, insert_idx, ] = x_
+
     def _make_samples(self, file_annotations):
         """
         file_annotations: path

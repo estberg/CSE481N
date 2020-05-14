@@ -58,6 +58,8 @@ def main():
     validation_generator = MSASLDataLoader(ANNOTATION_FILE_PATH_VAL, FRAMES_DIR_PATH, batch_size=BATCH_SIZE, height=224, width=224, color_mode='rgb', shuffle=True, frames_threshold=FRAME_LIMIT, num_classes=NUM_CLASSES)
     data_shape = train_generator.get_data_dim()
 
+    print("Training Samples", len(train_generator ) * BATCH_SIZE)
+
     # kinetics_classes = [x.strip() for x in open(LABEL_MAP_PATH)]
     msasl_classes = json.load(open(MSASL_LABEL_JSON))
 
