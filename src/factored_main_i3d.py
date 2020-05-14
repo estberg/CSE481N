@@ -24,8 +24,8 @@ CHECKPOINT_PATHS = {
     'rgb':'data/checkpoints/rgb_scratch/model.ckpt'
 }
 
-NEW_CHECKPOINT_PATHS = 'data/checkpoints/ms_asl/model'
-NAME = ''
+NEW_CHECKPOINT_PATHS = 'data/checkpoints/ms_asl_temp/model'
+NAME = 'MMT-LR0.001-'
 
 # KINETICS_LABEL_MAP_PATH = 'data/label_map.txt'
 
@@ -36,8 +36,17 @@ NUM_CLASSES = 100
 
 BATCH_SIZE = 8
 
+# Droupout keep rate (1 - dropout_rate)
+DROPOUT_KEEP_PROB = 0.7
+
+# Learning rate for the optimizer
+LEARNING_RATE = 0.001
+
+# Momentum for the optimizer
+MOMENTUM = 0.9
+
 # Number of epochs to train data
-EPOCHS = 100
+EPOCHS = 25
 
 # Minimum frames seems to be 28. 
 # The Train Generator will only take samples with at least this many frames. 
@@ -68,7 +77,7 @@ def train_from_kinetics_weights(train_generator, validation_generator, msasl_cla
       rgb_model = i3d.InceptionI3d(
           NUM_CLASSES, spatial_squeeze=True, final_endpoint='Logits')
       rgb_logits, _ = rgb_model(
-          rgb_input, is_training=False, dropout_keep_prob=1.0)
+          rgb_input, is_training=False, dropout_keep_prob=DROPOUT_KEEP_PROB)
     
     # The variable map is used to tell the saver which layers weights to restore. 
     # (the weights of the layers are all stored in tf variables)
@@ -108,7 +117,7 @@ def train_from_kinetics_weights(train_generator, validation_generator, msasl_cla
 
         # input and output shapes
         rgb_logits, _ = rgb_model(
-          rgb_input, is_training=True, dropout_keep_prob=1.0)
+          rgb_input, is_training=True, dropout_keep_prob=DROPOUT_KEEP_PROB)
         rgb_labels = tf.compat.v1.placeholder(tf.float32, [None, NUM_CLASSES])
         
         # Loss and optimizer to use
@@ -116,7 +125,10 @@ def train_from_kinetics_weights(train_generator, validation_generator, msasl_cla
         # TODO: Try with a more reasonable learning rate
         # loss = tf.nn.softmax_cross_entropy_with_logits_v2(logits=rgb_logits, labels=rgb_labels)
         loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=rgb_logits, labels=rgb_labels))
-        optimizer = tf.compat.v1.train.GradientDescentOptimizer(learning_rate=0.01).minimize(loss)
+        # optimizer = tf.compat.v1.train.GradientDescentOptimizer(learning_rate=0.01).minimize(loss)
+        optimizer = tf.compat.v1.train.MomentumOptimizer(learning_rate=LEARNING_RATE, momentum=MOMENTUM)
+        minimize = optimizer.minimize(loss)
+        sess.run(tf.compat.v1.variables_initializer(optimizer.variables()))
 
         # One step or batch of training.
         def step(samples, labels):
@@ -124,7 +136,7 @@ def train_from_kinetics_weights(train_generator, validation_generator, msasl_cla
             feed_dict[rgb_input] = samples
             feed_dict[rgb_labels] = labels
             result = sess.run(
-                [loss, optimizer],
+                [loss, minimize],
                 feed_dict=feed_dict)
             return result
 
@@ -135,49 +147,86 @@ def train_from_kinetics_weights(train_generator, validation_generator, msasl_cla
                 result = step(images, labels)
             data_generator.on_epoch_end()
             print("Loss" + str(result[0]))
+            return result[0]
         
+        summary_saver = []
         for i in range(EPOCHS):
-            epoch(train_generator, i)
+            epoch_loss = epoch(train_generator, i)
+            summary_saver.append([i + 1, epoch_loss])
             if i % 10 == 0:
                 train_accuracy = validate(sess, train_generator, rgb_model, rgb_input, 'Train')
-            if i % 2 == 0:
-                val_accuracy = validate(sess, validation_generator, rgb_model, rgb_input, 'Validation')
-            rgb_saver.save(sess, NEW_CHECKPOINT_PATHS + NAME + str(val_accuracy), global_step=i)
+                summary_saver[i].append(train_accuracy)
+            #if i % 2 == 0:
+            # evaluate validation set for every epoch
+            val_accuracy = validate(sess, validation_generator, rgb_model, rgb_input, 'Validation')
+            summary_saver[i].append(val_accuracy)
+            rgb_saver.save(sess, NEW_CHECKPOINT_PATHS + NAME + 'acc' + ('%.5f' % val_accuracy), global_step=i)
+        
+        # print summary which helps us create table
+        for result in summary_saver:
+            for i in range(len(result)):
+                if i != 0:
+                    print(', ', end='')
+                if len(result) == 3 and i == 2:
+                    print(', ', end='')
+                print(str(result[i]), end='')
+            print()
 
 
 def validate(sess, validation_generator, rgb_model, rgb_input, data_set):
+    # building phase (tensorflow placeholders) for model prediction
     val_logits, _ = rgb_model(
-      rgb_input, is_training=False, dropout_keep_prob=1.0)
+      rgb_input, is_training=False, dropout_keep_prob=DROPOUT_KEEP_PROB)
+    # TODO: val_labels is not needed now, may need to delete later
     val_labels = tf.compat.v1.placeholder(tf.float32, [None, NUM_CLASSES])
     val_predictions = tf.nn.softmax(val_logits)
 
+    # placeholders for predicted and expected labels
     out_labels = tf.compat.v1.placeholder(tf.float32, [None, NUM_CLASSES])
     true_labels = tf.compat.v1.placeholder(tf.float32, [None, NUM_CLASSES])
 
+    # placeholders for accuracy calculation
+    correct_prediction = tf.equal(tf.argmax(val_predictions, axis=1), tf.argmax(true_labels, axis=1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
     # TODO: Fix bug in accuracy calculation
     def step(samples, labels):
         feed_dict = {}
         feed_dict[rgb_input] = samples
-        out_logits, out_predictions = sess.run(
-            [val_logits, val_predictions],
+        feed_dict[true_labels] = labels
+        out_logits, step_accuracy = sess.run(
+            [val_logits, accuracy],
             feed_dict=feed_dict)
-        batch_accuracy, batch_accuracy_opp = tf.compat.v1.metrics.accuracy(out_labels, true_labels)
-        sess.run(tf.compat.v1.local_variables_initializer())
-        v = sess.run([batch_accuracy, batch_accuracy_opp], feed_dict={out_labels:out_predictions,
-                                       true_labels:labels})
-        return v[1]
+        return step_accuracy
+        # out_logits, out_predictions = sess.run(
+        #     [val_logits, val_predictions],
+        #     feed_dict=feed_dict)
+        # sorted_indices = np.argsort(out_predictions, axis=1)[::-1]
+        # print(sorted_indices.shape)
+        # print("sorted indices:")
+        # print(sorted_indices)
+        # print("logits: {}".format(out_logits))
+        # print("out pred: {}".format(out_predictions))
+        # print("labels: {}".format(labels))
+        # print(out_logits.shape)
+        # print(out_predictions.shape)
+        # print(labels.shape)
+        # batch_accuracy, batch_accuracy_opp = tf.compat.v1.metrics.accuracy(out_labels, true_labels)
+        # sess.run(tf.compat.v1.local_variables_initializer())
+        # v = sess.run([batch_accuracy, batch_accuracy_opp], feed_dict={out_labels:out_predictions,
+        #                                true_labels:labels})
+        # return v[1]
 
     batches = 0 
-    accuracy = 0
+    avg_accuracy = 0
     for images, labels in tqdm(validation_generator, desc=data_set):
         batch_accuracy = step(images, labels)
-        accuracy += batch_accuracy
+        avg_accuracy += batch_accuracy
         batches += 1
     
-    accuracy = accuracy / batches
-    print(data_set + " Accruacy:" + str(accuracy))
-    return accuracy
+    avg_accuracy = avg_accuracy / batches
+    print(data_set + " Accruacy:" + str(avg_accuracy))
+    return avg_accuracy
 
 
 def test_single_sample():
