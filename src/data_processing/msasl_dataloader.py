@@ -17,7 +17,7 @@ class MSASLDataLoader(keras.utils.Sequence):
     Essentially, it allows batch indexing on the data, and each epoch will randomy reorganize. 
     '''
 
-    def __init__(self, file_annotations, frames_dir, batch_size, height, width, color_mode='rgb', shuffle=True, frames_threshold=0, stretch_samples=True, num_classes=100):
+    def __init__(self, file_annotations, frames_dir, batch_size, height, width, color_mode='rgb', shuffle=True, frames_threshold=0, stretch_samples=True, num_classes=100, flipping):
         '''
         file_annotations : path
             List of files and their annotations in a text file
@@ -51,6 +51,7 @@ class MSASLDataLoader(keras.utils.Sequence):
         self.width = width
         self.frames_threshold = frames_threshold
         self.num_classes = num_classes
+        self.flipping = flipping
         # Samples is a list of dictionaries containing the metadata for each sample
         # See the _make_samples() method for the keys in the dictionary
         self.samples, self.max_frames, self.min_frames = self._make_samples(file_annotations)
@@ -124,7 +125,9 @@ class MSASLDataLoader(keras.utils.Sequence):
             # so the image doesn't need to be loaded and padded 
             # each epoch. Then also add a function in main (or whereever)
             # to delete these files after a run (preprocessing, etc, could change)
-            flip = bool(random.getrandbits(1))
+            flip = False
+            if self.flipping:
+                flip = bool(random.getrandbits(1))
             
             # Simple case -- the sample has enough frames
             if sample['duration'] >= self.frames_per_sample:
@@ -182,7 +185,7 @@ class MSASLDataLoader(keras.utils.Sequence):
         # convert range to [-1.0, 1.0]
         x_ = x_ / 255.0 * 2 - 1
         if flip:
-            x_ = np.flip(x_, 0)
+            x_ = np.flip(x_, 1)
         X[idx, insert_idx, ] = x_
 
     def _make_samples(self, file_annotations):

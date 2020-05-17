@@ -36,6 +36,9 @@ NUM_CLASSES = 100
 
 BATCH_SIZE = 8
 
+# Random Image Flipping
+FLIPPING = True
+
 # Droupout keep rate (1 - dropout_rate)
 DROPOUT_KEEP_PROB = 0.7
 
@@ -59,8 +62,8 @@ FRAME_LIMIT = 64
 
 # Main method makes a train and validation set generator
 def main():
-    train_generator = MSASLDataLoader(ANNOTATION_FILE_PATH_TRAIN, FRAMES_DIR_PATH, batch_size=BATCH_SIZE, height=224, width=224, color_mode='rgb', shuffle=True, frames_threshold=FRAME_LIMIT, num_classes=NUM_CLASSES)
-    validation_generator = MSASLDataLoader(ANNOTATION_FILE_PATH_VAL, FRAMES_DIR_PATH, batch_size=BATCH_SIZE, height=224, width=224, color_mode='rgb', shuffle=True, frames_threshold=FRAME_LIMIT, num_classes=NUM_CLASSES)
+    train_generator = MSASLDataLoader(ANNOTATION_FILE_PATH_TRAIN, FRAMES_DIR_PATH, batch_size=BATCH_SIZE, height=224, width=224, color_mode='rgb', shuffle=True, frames_threshold=FRAME_LIMIT, num_classes=NUM_CLASSES, flipping=FLIPPING)
+    validation_generator = MSASLDataLoader(ANNOTATION_FILE_PATH_VAL, FRAMES_DIR_PATH, batch_size=BATCH_SIZE, height=224, width=224, color_mode='rgb', shuffle=True, frames_threshold=FRAME_LIMIT, num_classes=NUM_CLASSES, flipping=FLIPPING)
     data_shape = train_generator.get_data_dim()
 
     print("Training Samples", len(train_generator ) * BATCH_SIZE)
