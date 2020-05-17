@@ -4,6 +4,7 @@ import numpy as np
 import sys
 import random
 import PIL
+import code
 
 class MSASLDataLoader(keras.utils.Sequence):
     '''
@@ -123,13 +124,14 @@ class MSASLDataLoader(keras.utils.Sequence):
             # so the image doesn't need to be loaded and padded 
             # each epoch. Then also add a function in main (or whereever)
             # to delete these files after a run (preprocessing, etc, could change)
+            flip = bool(random.getrandbits(1))
             
             # Simple case -- the sample has enough frames
             if sample['duration'] >= self.frames_per_sample:
                 start = random.randrange(sample['start'], sample['end'] - (self.frames_per_sample - 1))
                 end = start + self.frames_per_sample
                 for frame_idx in range(start, end):
-                    self._insert_frame_to_X(X, idx, sample, frame_idx, frame_idx - start)
+                    self._insert_frame_to_X(X, idx, sample, frame_idx, frame_idx - start, flip)
                     i += 1
 
             # Stretching case -- the sample does not have enough frames
@@ -143,22 +145,33 @@ class MSASLDataLoader(keras.utils.Sequence):
                 if front_stretch:
                     front_stretch_frames = stretch
                     for insert_idx in range(0, stretch):
-                        self._insert_frame_to_X(X, idx, sample, start, insert_idx)
+                        self._insert_frame_to_X(X, idx, sample, start, insert_idx, flip)
                         i += 1
                 for frame_idx in range(start, end):
-                    self._insert_frame_to_X(X, idx, sample, frame_idx, front_stretch_frames + frame_idx - start)
-                    i += 1
+                    try: 
+                        self._insert_frame_to_X(X, idx, sample, frame_idx, front_stretch_frames + frame_idx - start, flip)
+                        i += 1
+                    except:
+                        # if fails before reaching end, do a final stretch too
+                        front_stretch = False
+                        duration = frame_idx - start + front_stretch_frames
+                        end = frame_idx
+                        break
                 if not front_stretch:
                     for insert_idx in range(duration, self.frames_per_sample):
-                        self._insert_frame_to_X(X, idx, sample, end - 1, insert_idx)
+                        try:
+                            self._insert_frame_to_X(X, idx, sample, end - 1, insert_idx, flip)
+                        except:
+                            code.interact(local=dict(globals(), **locals()))
                         i += 1
-
+            if i != self.frames_per_sample:
+                print("NO!", i)
             # Store class
             y[idx][sample['label']] = 1
 
         return X, y
     
-    def _insert_frame_to_X(self, X, idx, sample, frame_idx, insert_idx):
+    def _insert_frame_to_X(self, X, idx, sample, frame_idx, insert_idx, flip):
         num = f'{(frame_idx + 1):05}'
         path = self.frames_dir + '/' + sample['rel_images_dir'] + '/img_' + num + '.jpg'
         img = keras.preprocessing.image.load_img(
@@ -168,6 +181,8 @@ class MSASLDataLoader(keras.utils.Sequence):
         x_ = keras.preprocessing.image.img_to_array(img, data_format='channels_last')
         # convert range to [-1.0, 1.0]
         x_ = x_ / 255.0 * 2 - 1
+        if flip:
+            x_ = np.flip(x_, 0)
         X[idx, insert_idx, ] = x_
 
     def _make_samples(self, file_annotations):
@@ -192,10 +207,15 @@ class MSASLDataLoader(keras.utils.Sequence):
                 labeled_annotations['rel_images_dir'] = annotations[0]
                 labeled_annotations['label'] = int(annotations[1])
                 # TODO: I am not sure about this start and end.
+                
+                # These are shortened clips 
                 start = int(annotations[2])
                 end = int(annotations[3])
+
+                # These are full clips
                 # start = int(annotations[4])
                 # end = int(annotations[5])
+                
                 duration = end - start
                 labeled_annotations['start'] = start
                 labeled_annotations['end'] = end

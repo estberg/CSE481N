@@ -24,8 +24,8 @@ CHECKPOINT_PATHS = {
     'rgb':'data/checkpoints/rgb_scratch/model.ckpt'
 }
 
-NEW_CHECKPOINT_PATHS = 'data/checkpoints/ms_asl_temp/model'
-NAME = 'MMT-LR0.001-'
+NEW_CHECKPOINT_PATHS = 'data/checkpoints/ms_asl/model'
+NAME = 'DecayMMTShortSamplesFlipImages'
 
 # KINETICS_LABEL_MAP_PATH = 'data/label_map.txt'
 
@@ -45,8 +45,13 @@ LEARNING_RATE = 0.001
 # Momentum for the optimizer
 MOMENTUM = 0.9
 
+# Parameters for Adam optimizer
+ADAM_INIT_LR = 0.01
+ADAM_EPS = 1e-3
+ADAM_WEIGHT_DECAY = 1e-7
+
 # Number of epochs to train data
-EPOCHS = 25
+EPOCHS = 100
 
 # Minimum frames seems to be 28. 
 # The Train Generator will only take samples with at least this many frames. 
@@ -122,21 +127,28 @@ def train_from_kinetics_weights(train_generator, validation_generator, msasl_cla
           rgb_input, is_training=True, dropout_keep_prob=DROPOUT_KEEP_PROB)
         rgb_labels = tf.compat.v1.placeholder(tf.float32, [None, NUM_CLASSES])
         
+        
+        # TODO: Try with a more reasonable learning rate
+        # global_step and decayed_lr can be used to decay the learning rate exponentially
+        global_step = tf.compat.v1.placeholder(tf.int32)
+        decayed_lr = tf.compat.v1.train.exponential_decay(learning_rate=ADAM_INIT_LR, global_step=global_step, decay_steps=5, decay_rate=0.95)
+
         # Loss and optimizer to use
         # TODO: Try with different loss functions and optimizers
-        # TODO: Try with a more reasonable learning rate
         # loss = tf.nn.softmax_cross_entropy_with_logits_v2(logits=rgb_logits, labels=rgb_labels)
         loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=rgb_logits, labels=rgb_labels))
         # optimizer = tf.compat.v1.train.GradientDescentOptimizer(learning_rate=0.01).minimize(loss)
-        optimizer = tf.compat.v1.train.MomentumOptimizer(learning_rate=LEARNING_RATE, momentum=MOMENTUM)
+        optimizer = tf.compat.v1.train.MomentumOptimizer(learning_rate=decayed_lr, momentum=MOMENTUM)
+        # optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=decayed_lr, epsilon=ADAM_EPS)
         minimize = optimizer.minimize(loss)
         sess.run(tf.compat.v1.variables_initializer(optimizer.variables()))
 
         # One step or batch of training.
-        def step(samples, labels):
+        def step(samples, labels, i):
             """Performs one optimizer step on a single mini-batch."""
             feed_dict[rgb_input] = samples
             feed_dict[rgb_labels] = labels
+            feed_dict[global_step] = i
             result = sess.run(
                 [loss, minimize],
                 feed_dict=feed_dict)
@@ -146,11 +158,14 @@ def train_from_kinetics_weights(train_generator, validation_generator, msasl_cla
         # One epoch of training
         def epoch(data_generator, i):
             for images, labels in tqdm(data_generator, desc='EPOCH' + str(i)):
-                result = step(images, labels)
+                result = step(images, labels, i)
             data_generator.on_epoch_end()
             print("Loss" + str(result[0]))
             return result[0]
         
+        # val_accuracy_prior = 0
+
+        # summary_saver keeps track of epoch_num, loss, traning acc., validation acc.
         summary_saver = []
         for i in range(EPOCHS):
             epoch_loss = epoch(train_generator, i)
@@ -158,22 +173,30 @@ def train_from_kinetics_weights(train_generator, validation_generator, msasl_cla
             if i % 10 == 0:
                 train_accuracy = validate(sess, train_generator, rgb_model, rgb_input, 'Train')
                 summary_saver[i].append(train_accuracy)
-            #if i % 2 == 0:
             # evaluate validation set for every epoch
             val_accuracy = validate(sess, validation_generator, rgb_model, rgb_input, 'Validation')
             summary_saver[i].append(val_accuracy)
             rgb_saver.save(sess, NEW_CHECKPOINT_PATHS + NAME + 'acc' + ('%.5f' % val_accuracy), global_step=i)
-        
-        # print summary which helps us create table
-        for result in summary_saver:
-            for i in range(len(result)):
-                if i != 0:
-                    print(', ', end='')
-                if len(result) == 3 and i == 2:
-                    print(', ', end='')
-                print(str(result[i]), end='')
-            print()
+            if i % 5 == 0:
+                print_train_summary(summary_saver)
+            # # if validation accuracy starts decreasing, decrease the learning rate
+            # if val_accuracy_prior < val_accuracy:
+            #     decayed_lr = decayed_lr / 10
+            #     optimizer = tf.compat.v1.train.MomentumOptimizer(learning_rate=decayed_lr, momentum=MOMENTUM)
+            #     # optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=decayed_lr, epsilon=ADAM_EPS)
+            #     minimize = optimizer.minimize(loss)
+            #     sess.run(tf.compat.v1.variables_initializer(optimizer.variables()))
 
+def print_train_summary(summary_saver):
+    # print summary which helps us create table
+    for result in summary_saver:
+        for i in range(len(result)):
+            if i != 0:
+                print(', ', end='')
+            if len(result) == 3 and i == 2:
+                print(', ', end='')
+            print(str(result[i]), end='')
+        print()
 
 def validate(sess, validation_generator, rgb_model, rgb_input, data_set):
     # building phase (tensorflow placeholders) for model prediction
