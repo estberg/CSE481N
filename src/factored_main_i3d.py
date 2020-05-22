@@ -25,7 +25,7 @@ CHECKPOINT_PATHS = {
 }
 
 NEW_CHECKPOINT_PATHS = 'data/checkpoints/ms_asl/model'
-NAME = 'DecayMMTShortSamplesFlipImages'
+NAME = 'MMTFullSamplesFlipImagesDR0.5'
 
 # KINETICS_LABEL_MAP_PATH = 'data/label_map.txt'
 
@@ -40,10 +40,10 @@ BATCH_SIZE = 8
 FLIPPING = True
 
 # Droupout keep rate (1 - dropout_rate)
-DROPOUT_KEEP_PROB = 0.7
+DROPOUT_KEEP_PROB = 0.5
 
 # Learning rate for the optimizer
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.01
 
 # Momentum for the optimizer
 MOMENTUM = 0.9
@@ -141,7 +141,7 @@ def train_from_kinetics_weights(train_generator, validation_generator, msasl_cla
         # loss = tf.nn.softmax_cross_entropy_with_logits_v2(logits=rgb_logits, labels=rgb_labels)
         loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=rgb_logits, labels=rgb_labels))
         # optimizer = tf.compat.v1.train.GradientDescentOptimizer(learning_rate=0.01).minimize(loss)
-        optimizer = tf.compat.v1.train.MomentumOptimizer(learning_rate=decayed_lr, momentum=MOMENTUM)
+        optimizer = tf.compat.v1.train.MomentumOptimizer(learning_rate=LEARNING_RATE, momentum=MOMENTUM)
         # optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=decayed_lr, epsilon=ADAM_EPS)
         minimize = optimizer.minimize(loss)
         sess.run(tf.compat.v1.variables_initializer(optimizer.variables()))

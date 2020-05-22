@@ -17,7 +17,7 @@ class MSASLDataLoader(keras.utils.Sequence):
     Essentially, it allows batch indexing on the data, and each epoch will randomy reorganize. 
     '''
 
-    def __init__(self, file_annotations, frames_dir, batch_size, height, width, color_mode='rgb', shuffle=True, frames_threshold=0, stretch_samples=True, num_classes=100, flipping):
+    def __init__(self, file_annotations, frames_dir, batch_size, height, width, color_mode='rgb', shuffle=True, frames_threshold=0, stretch_samples=True, num_classes=100, flipping=True):
         '''
         file_annotations : path
             List of files and their annotations in a text file
@@ -212,12 +212,12 @@ class MSASLDataLoader(keras.utils.Sequence):
                 # TODO: I am not sure about this start and end.
                 
                 # These are shortened clips 
-                start = int(annotations[2])
-                end = int(annotations[3])
+                # start = int(annotations[2])
+                # end = int(annotations[3])
 
                 # These are full clips
-                # start = int(annotations[4])
-                # end = int(annotations[5])
+                start = int(annotations[4])
+                end = int(annotations[5])
                 
                 duration = end - start
                 labeled_annotations['start'] = start
