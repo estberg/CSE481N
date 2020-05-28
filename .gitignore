@@ -17,3 +17,6 @@ data/MS-ASL/videos.tar.gz
 
 # Ignore testing images
 /src/tests/images/
+
+# Ignore graphs
+/graphs/
